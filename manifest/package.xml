@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
-		<members>AccountLimiteCreditoMock</members>
-		<members>AccountLimiteCreditoService</members>
-		<members>AccountLimiteCreditoServiceTest</members>
-		<members>AccountLimiteCreditoWrapper</members>
-		<members>AccountLimiteCreditoWrapperTest</members>
+		<members>AccountUpdateCentroDeLucroBatch</members>
+		<members>AccountUpdateCentroDeLucroBatchTest</members>
+		<members>AccountUpdateCentroDeLucroQueueable</members>
+		<members>AccountUpdateCentroDeLucroQueueableTest</members>
+		<members>AreaDeVendasTriggerHandler</members>
+		<members>AreaDeVendasTriggerHandlerTest</members>
+		<members>CentroDeLucroTriggerHandler</members>
+		<members>CentroDeLucroTriggerHandlerTest</members>
 		<name>ApexClass</name>
 	</types>
-	<types>
-		<members>AccountLimiteCredito</members>
-		<name>AuraDefinitionBundle</name>
-	</types>
-	<version>51.0</version>
+	<version>53.0</version>
 </Package>
