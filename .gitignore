@@ -33,3 +33,4 @@ ehthumbs.db
 $RECYCLE.BIN/
 
 src/
+.sfdx/tools/apex.db
