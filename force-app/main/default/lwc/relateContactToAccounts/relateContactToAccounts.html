@@ -1,0 +1,268 @@
+<template>
+    <lightning-card title="Relacionar à multiplas Contas">
+        <template if:true={firstPageSelection}>
+            <lightning-layout multiple-rows="true" vertical-align="end">
+
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-radio-group name="searchByRadioBtn"
+                                            label="Pesquisar por"
+                                            options={radioBtnOptions}
+                                            value={selectedSearchOption}
+                                            onchange={handleRadioBtnChoice}
+                                            type="button"
+                                            disabled={disableRadioButtons}></lightning-radio-group>
+                </lightning-layout-item>
+
+                <lightning-layout-item if:false={validateInputCnpjBasico} size="4" padding="around-small">
+                    <lightning-input    type="text" 
+                                        value={searchKey} 
+                                        onchange={updateKey}>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <lightning-layout-item if:true={validateInputCnpjBasico} size="4" padding="around-small">
+                    <lightning-input    type="text" 
+                                        value={searchKey}
+                                        minlength="8"
+                                        maxlength="8"
+                                        message-when-too-short="O CNPJ básico deve conter 8 dígitos."
+                                        onchange={updateKey}>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="2" padding="around-small">
+                    <lightning-button   label="Pesquisar" 
+                                        onclick={handleSearch} 
+                                        variant="brand"
+                                        name="searchButton"></lightning-button>
+                </lightning-layout-item>
+
+                <template if:true={msgNoSearchReference}>
+                    <div style="color:red" class="slds-m-around_x-small">
+                        <p>Selecione um dos objetos acima para pesquisa.</p>
+                    </div>
+                </template>
+
+                <template if:true={msgNoSearchKey}>
+                    <div style="color:red" class="slds-m-around_x-small">
+                        <p>Digite um termo para pesquisa.</p>
+                    </div>
+                </template>
+
+                <div if:true={msgNoRecordsFound} style="color:red" class="slds-m-around_x-small slds-float_right">
+                    <p>Não foram encontrados registros com este termo.</p>
+                </div>
+
+                <lightning-layout-item size="12" padding="around-small">
+                    <div if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+                    </div>
+                    <div if:true={showTable} style="height: 300px;">
+                        <lightning-datatable        if:true={showGruposPlanoContasTable}
+                                                    class="slds-max-medium-table_stacked"
+                                                    data-id="gruposTable"
+                                                    key-field="Id" 
+                                                    data={data} 
+                                                    columns={columnsGrupoPlanoContas} 
+                                                    selected-rows={recordsIds}
+                                                    onrowselection={onRowSelection}></lightning-datatable>
+
+                        <lightning-datatable        if:true={showAccountsTable}
+                                                    class="slds-max-medium-table_stacked"
+                                                    data-id="accountsTable"
+                                                    key-field="Id" 
+                                                    data={data} 
+                                                    columns={columnsAccount} 
+                                                    selected-rows={recordsIds}
+                                                    onrowselection={onRowSelection}></lightning-datatable>
+
+                    </div>
+                </lightning-layout-item>
+
+                <lightning-layout-item if:true={showTable} padding="around-small" flexibility="auto">
+                    <lightning-button icon-name="utility:chevronleft" icon-position="left"
+                                      onclick={onPreviousPage} disabled={isFirstPage}></lightning-button>
+                    <label class="slds-p-around_small">Página {pageNumber}</label>
+                    <lightning-button icon-name="utility:chevronright" icon-position="right" 
+                                      onclick={onNextPage} disabled={isLastPage}></lightning-button>
+                </lightning-layout-item>
+
+                <div if:true={msgNoSelection} style="color:red" class="slds-m-around_x-small slds-float_right">
+                    <p>É necessário selecionar ao menos um registro.</p>
+                </div>
+
+                <div class="modal-footer slds-modal__footer slds-size_1-of-1">
+                    <lightning-button   variant="base" 
+                                        label="Cancelar" 
+                                        title="cancelar" 
+                                        onclick={closeQuickAction} 
+                                        class="slds-m-left_x-small"></lightning-button>
+
+                    <lightning-button   variant="brand" 
+                                        label="Próximo" 
+                                        title="proximo" 
+                                        onclick={toACRfieldsPage} 
+                                        class="slds-m-left_x-small"
+                                        disabled={disableNextButton}></lightning-button>
+                </div>
+
+            </lightning-layout>
+        </template>
+    </lightning-card>
+
+    <div if:true={secondPageFields}>
+        <lightning-layout  multiple-rows="true" vertical-align="end">
+        <lightning-layout-item size="12" padding="horizontal-small">
+            <div class="slds-box slds-box_x-small slds-theme_shade">
+                <p>Informações de relacionamento de contato da conta</p>
+            </div>
+        </lightning-layout-item>
+
+            <lightning-layout-item size="12" padding="horizontal-large" class="slds-m-vertical_small">
+                <lightning-dual-listbox name="funcoesContato"
+                        label="Funções do Contato"
+                        source-label="Disponíveis"
+                        selected-label="Escolhidos"
+                        options={mapFuncoesContato}
+                        onchange={handleDualListBox}
+                        value={selectedFuncoesContato}
+                        size="4"></lightning-dual-listbox>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="12" padding="horizontal-large" class="slds-m-vertical_small">
+                    <lightning-dual-listbox name="roles"
+                            label="Papéis"
+                            source-label="Disponíveis"
+                            selected-label="Escolhidos"
+                            options={mapRoles}
+                            onchange={handleDualListBox}
+                            value={selectedRoles}
+                            size="4"></lightning-dual-listbox>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" padding="horizontal-large" class="slds-m-top_small slds-m-bottom_medium">
+                <lightning-input type="checkbox" label="Boleto Por Email" name="boletoPorEmail" onchange={handleCheckbox} checked={boletoPorEmail}></lightning-input>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" padding="horizontal-large" class="slds-m-top_small slds-m-bottom_medium">
+                <lightning-combobox name="relationshipStrength"
+                                    label="Relationship Strength"
+                                    value={relationshipStrength}
+                                    placeholder="-- Nenhum --"
+                                    options={mapRelationshipStrength}
+                                    onchange={handleCombobox}>
+                </lightning-combobox>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="12" padding="horizontal-small">
+                <div class="slds-box slds-box_x-small slds-theme_shade class-m-top_medium">
+                    <p>Relationship Status</p>
+                </div>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" padding="horizontal-large" class="slds-m-vertical_small">
+                <lightning-input type="date" name="startDate" label="Data de Início" value={startDate} onchange={handleDateInput}></lightning-input>
+            </lightning-layout-item>
+            
+            <lightning-layout-item size="6" padding="horizontal-large" class="slds-m-vertical_small">
+                <lightning-input type="checkbox" label="Ativação" name="active" onchange={handleCheckbox} checked={active}></lightning-input>
+            </lightning-layout-item>
+            
+            <lightning-layout-item size="6" padding="horizontal-large" class="slds-m-top_small slds-m-bottom_medium">
+                <lightning-input type="date" name="endDate" label="Data de Término" value={endDate} onchange={handleDateInput}></lightning-input>
+            </lightning-layout-item>
+
+            <div class="modal-footer slds-modal__footer slds-size_1-of-1">
+                <lightning-button   label="Voltar"
+                                    onclick={handleReturn} 
+                                    variant="neutral"
+                                    class="slds-m-left_x-small slds-float_left">
+            </lightning-button>
+
+                <lightning-button   variant="base" 
+                                    label="Cancelar" 
+                                    title="cancelar" 
+                                    onclick={closeQuickAction} 
+                                    class="slds-m-left_x-small"></lightning-button>
+
+                <lightning-button   variant="brand" 
+                                    label="Próximo" 
+                                    title="proximo" 
+                                    onclick={toConfirmationPage} 
+                                    class="slds-m-left_x-small"></lightning-button>
+            </div>
+
+        </lightning-layout>
+    </div>
+
+    <template if:true={thirdPageConfirmation}>
+        <lightning-card>
+            <lightning-layout multiple-rows="true">
+
+                <lightning-layout-item size="12" padding="around-small">
+                    <div style="height: 300px;">
+                        <lightning-datatable    if:true={showAccountsTable}
+                                                key-field="Id" 
+                                                data={allSelectedRecords} 
+                                                columns={colAccountsWithDeleteBtn} 
+                                                hide-checkbox-column=true 
+                                                onrowaction={handleDelete}></lightning-datatable>
+
+                        <lightning-datatable    if:true={showGruposPlanoContasTable}
+                                                key-field="Id" 
+                                                data={allSelectedRecords} 
+                                                columns={colGruposWithDeleteBtn} 
+                                                hide-checkbox-column=true 
+                                                onrowaction={handleDelete}></lightning-datatable>
+                    </div>
+                </lightning-layout-item>
+
+                <lightning-layout-item size ="12" padding="around-small">
+                    <label>{selectedRecordsCount} registros selecionados.</label>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" padding="around-small">
+                    <p><b>Funções do Contato</b></p>
+                    <template for:each={selectedFuncoesContatoLabels} for:item='funcaoContato'>
+                        <div key={funcaoContato} class="slds-m-left_medium">
+                            <ul style="list-style-type:circle">
+                            <li>{funcaoContato}</li>
+                            </ul>
+                        </div>
+                    </template>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" padding="around-small">
+                    <p><b>Papéis</b></p>
+                    <template for:each={selectedRolesLabels} for:item='role'>
+                        <div key={role} class="slds-m-left_medium">
+                            <ul style="list-style-type:circle">
+                            <li>{role}</li>
+                            </ul>
+                        </div>
+                    </template>
+                </lightning-layout-item>
+
+            </lightning-layout>
+
+            <div class="modal-footer slds-modal__footer slds-size_1-of-1">
+                <lightning-button   label="Voltar"
+                                    onclick={handleReturn} 
+                                    variant="neutral"
+                                    class="slds-m-left_x-small slds-float_left"></lightning-button>
+
+                <lightning-button   variant="neutral" 
+                                    label="Cancelar" 
+                                    onclick={closeQuickAction} 
+                                    class="slds-m-left_x-small"
+                                    padding="around-small"></lightning-button>
+
+                <lightning-button   label="Concluir" 
+                                    onclick={handleConfirm} 
+                                    variant="brand"
+                                    class="slds-m-left_x-small"></lightning-button>
+            </div>
+
+        </lightning-card>
+    </template>
+</template>
