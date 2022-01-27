@@ -1,0 +1,196 @@
+<template>
+    <div if:false={showDetails} class="slds-box 
+                                        slds-theme_default
+                                        slds-box_xx-small
+                                        slds-grid
+                                        slds-wrap">
+
+        <div class="slds-text-heading_medium slds-var-p-bottom_x-small slds-border_bottom slds-col slds-size_9-of-12">
+                Pedidos Cadastrados
+        </div>
+
+        <div class="slds-nubbin_top-right slds-col slds-grid_align-end slds-size_1-of-1 slds-medium-size--3-of-12">
+            <lightning-button-menu label={periodoBusca} alternative-text="Período de busca" tooltip="Período de busca"  menu-alignment="right" icon-name="utility:date_input" class="button_menu_date">
+                <lightning-menu-item value="15" label="Últimos 15 dias" onclick={changeDate}></lightning-menu-item>
+                <lightning-menu-item value="30" label="Últimos 30 dias" onclick={changeDate}></lightning-menu-item>
+                <lightning-menu-item value="60" label="Últimos 60 dias" onclick={changeDate}></lightning-menu-item>
+                <lightning-menu-item value="90" label="Últimos 90 dias" onclick={changeDate}></lightning-menu-item>
+            </lightning-button-menu>
+        </div>
+
+        <div if:true={showSpinner} class="slds-align_absolute-center slds-size_1-of-1" style="height:4rem">
+            <div role="status" class="slds-spinner slds-spinner_x-small slds-spinner_inline">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+
+        <lightning-card if:true={msgNenhumPedido} class="slds-size_1-of-1">
+            <ul class="slds-list_horizontal 
+                        slds-align_absolute-center 
+                        slds-p-vertical_x-small">
+                <li class="slds-p-horizontal_xx-small">
+                    <lightning-icon icon-name="utility:warning" alternative-text="Warning!" variant="warning"
+                                    title="warning variant x-small" size="x-small"></lightning-icon>
+                </li>
+                <li class="slds-p-horizontal_xx-small">
+                    <p>Não foram encontrados pedidos cadastrados nos últimos {searchPeriod} dias</p>
+                </li>
+            </ul>
+        </lightning-card>
+
+        <lightning-card if:true={msgSemCodigoSap} class="slds-size_1-of-1">
+            <ul class="slds-list_horizontal 
+                        slds-align_absolute-center 
+                        slds-p-vertical_x-small">
+                <li class="slds-p-horizontal_xx-small">
+                    <lightning-icon icon-name="utility:warning" alternative-text="Warning!" variant="warning"
+                                    title="warning variant x-small" size="x-small"></lightning-icon>
+                </li>
+                <li class="slds-p-horizontal_xx-small">
+                    <p>Não é possível consultar os pedidos cadastrados para Contas que não possuem Código Sap</p>
+                </li>
+            </ul>
+        </lightning-card>
+        
+        <div if:false={showSpinner} class="slds-size_1-of-1">
+            <div if:true={showTable} class="slds-size_1-of-1 slds-scrollable" style="height: 365px;">
+                <lightning-tabset class="slds-size_1-of-1">
+
+                    <lightning-tab label="Combustível">
+                        <lightning-layout multiple-rows="true">
+
+                            <lightning-layout-item if:true={nenhumPedidoCombustivel} class="slds-align_absolute-center slds-m-around_medium">
+                                <p>Não foi encontrado nenhum pedido do tipo Combustível neste período.</p>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item  size="12">
+                                <table if:false={nenhumPedidoCombustivel} class="slds-table slds-table--bordered slds-size_1-of-1">
+                                    <thead>
+                                        <tr>
+                                            <th>Data Pedido</th>
+                                            <th class="full_text">Data Faturamento</th>
+                                            <th class="short_text">Faturamento</th>
+                                            <th>Pedido</th>
+                                            <th class="full_text">Quantidade Pedida</th>
+                                            <th class="short_text">Qtd. Pedida</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="slds-text-body_regular">
+                                        <template for:each={ordensVendaCombustiveisView} for:item='ordemVenda'>
+                                            <tr key={ordemVenda.Numero}>
+                                                <td>
+                                                    <lightning-formatted-date-time value={ordemVenda.DataPedido}></lightning-formatted-date-time>
+                                                </td>
+                                                <td>
+                                                    <lightning-formatted-date-time value={ordemVenda.DataEntrega}></lightning-formatted-date-time>
+                                                </td>
+                                                <td>
+                                                    <lightning-button variant="base" label={ordemVenda.Numero} onclick={openDetails}></lightning-button>
+                                                </td>
+                                                <td>
+                                                    <lightning-formatted-number value={ordemVenda.QuantidadePedida} format-style="decimal"></lightning-formatted-number>
+                                                </td>
+                                                <td class="slds-cell-wrap">
+                                                    <div class={ordemVenda.CssColorClass}>
+                                                        <div class="slds-line-clamp_small">{ordemVenda.StatusOrdem}</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item if:true={showLessCombustiveis} class="slds-size_1-of-1">
+                                <ul class="slds-list_horizontal 
+                                            slds-align_absolute-center 
+                                            slds-p-vertical_xx-small">
+                                    <li class="slds-p-horizontal_xx-small">
+                                        <lightning-button variant="base" label="Mostrar todos" name="showAllCombustiveis" onclick={showAll}></lightning-button>
+                                    </li>
+                                    <li class="slds-p-horizontal_xx-small">
+                                        <lightning-icon icon-name="utility:chevrondown" alternative-text="Mostrar todos"
+                                                        size="x-small"></lightning-icon>
+                                    </li>
+                                </ul>
+                            </lightning-layout-item>
+
+                        </lightning-layout>
+                    </lightning-tab>
+
+                    <lightning-tab label="Lubrificante" size="12">
+                        <lightning-layout multiple-rows="true">
+
+                            <lightning-layout-item if:true={nenhumPedidoLubrificante} class="slds-align_absolute-center slds-m-around_medium">
+                                <p>Não foi encontrado nenhum pedido do tipo Lubrificante neste período.</p>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item  size="12">
+                                <table if:false={nenhumPedidoLubrificante} class="slds-table slds-table--bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Data Pedido</th>
+                                            <th class="full_text">Data Faturamento</th>
+                                            <th class="short_text">Faturamento</th>
+                                            <th>Pedido</th>
+                                            <th class="full_text">Quantidade Pedida</th>
+                                            <th class="short_text">Qtd. Pedida</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="slds-text-body_regular">
+                                        <template for:each={ordensVendaLubrificantesView} for:item='ordemVenda'>
+                                            <tr key={ordemVenda.Numero}>
+                                                <td>
+                                                    <lightning-formatted-date-time value={ordemVenda.DataPedido}></lightning-formatted-date-time>
+                                                </td>
+                                                <td>
+                                                    <lightning-formatted-date-time value={ordemVenda.DataEntrega}></lightning-formatted-date-time>
+                                                </td>
+                                                <td>
+                                                    <lightning-button variant="base" label={ordemVenda.Numero} onclick={openDetails}></lightning-button>
+                                                </td>
+                                                <td>
+                                                    <lightning-formatted-number value={ordemVenda.QuantidadePedida} format-style="decimal"></lightning-formatted-number>
+                                                </td>
+                                                <td class="slds-cell-wrap">
+                                                    <div class={ordemVenda.CssColorClass}>
+                                                        <div class="slds-line-clamp_small">{ordemVenda.StatusOrdem}</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item if:true={showLessLubrificantes} class="slds-size_1-of-1">
+                                <ul class="slds-list_horizontal 
+                                            slds-align_absolute-center 
+                                            slds-p-vertical_xx-small">
+                                    <li class="slds-p-horizontal_xx-small">
+                                        <lightning-button variant="base" label="Mostrar todos" name="showAllLubrificantes" onclick={showAll}></lightning-button>
+                                    </li>
+                                    <li class="slds-p-horizontal_xx-small">
+                                        <lightning-icon icon-name="utility:chevrondown" alternative-text="Mostrar todos"
+                                                        size="x-small"></lightning-icon>
+                                    </li>
+                                </ul>
+                            </lightning-layout-item>
+
+                        </lightning-layout>
+                    </lightning-tab>
+                </lightning-tabset>
+            </div>
+        </div>
+    </div>
+
+    <!--open detalhes do pedido-->
+    <template if:true={showDetails}>
+        <c-detalhes-pedido detalhes={currentDetalhesOrdemVenda} pedido={currentPedido} remessas={currentRemessa} onclose={closeDetail}></c-detalhes-pedido>
+    </template>
+
+</template>

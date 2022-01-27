@@ -1,0 +1,299 @@
+<template>
+    
+    <div if:false={showDetails} data-id="container" class="slds-box 
+        slds-theme_default
+        slds-box_xx-small
+        container-box">
+
+        <div data-id="header" class="slds-grid slds-wrap">
+            <lightning-button-icon icon-name="utility:back"  variant="bare" alternative-text="Voltar" title="Voltar" class="slds-float_left" onclick={close} size="medium"></lightning-button-icon>
+            <h2 id="heading-pedido" class="slds-text-heading_medium slds-hyphenate slds-align_absolute-center slds-col slds-size_1-of-1 heading-pedido">Pedido Nº {pedido.Numero}</h2>
+        </div>
+
+        <div data-id="body" class="">
+            <lightning-tabset>
+                <lightning-tab label="Informações básicas">
+                    <lightning-layout multiple-rows="true">
+                        <div class="slds-size_1-of-1 slds-grid slds-wrap slds-scrollable">
+                        
+                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-top_medium">
+                                <p class="slds-text-title slds-p-top_xx-small slds-p-bottom_x-small bold_text">Cadastro</p>
+                                <lightning-formatted-date-time value={pedido.DataPedido}></lightning-formatted-date-time>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-top_medium">
+                                <p class="slds-text-title slds-p-top_xx-small slds-p-bottom_x-small bold_text">Previsão de Faturamento</p>
+                                <lightning-formatted-date-time value={pedido.DataEntrega}></lightning-formatted-date-time>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-top_medium">
+                                <p class="slds-text-title slds-p-top_xx-small slds-p-bottom_x-small bold_text">Emissor</p>
+                                <lightning-formatted-text value={pedido.Emissor}></lightning-formatted-text>
+                            </lightning-layout-item>
+                            
+                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-top_medium">
+                                <p class="slds-text-title slds-p-top_xx-small slds-p-bottom_x-small bold_text">Recebedor</p>
+                                <lightning-formatted-text value={pedido.Recebedor}></lightning-formatted-text>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-top_medium">
+                                <p class="slds-text-title slds-p-top_xx-small slds-p-bottom_x-small bold_text">Origem</p>
+                                <lightning-formatted-text value={pedido.TipoPedido}></lightning-formatted-text>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item class="slds-col slds-size_1-of-1 slds-medium-size--1-of-2 slds-m-top_medium slds-m-bottom_medium">
+                                <div class="slds-form-element">
+                                    <span class="slds-form-element__label bold_text">Endereço</span>
+                                    <div class="slds-form-element__control">
+                                    <div class="slds-form-element__static">
+                                        <p>{endereco}</p>
+                                    </div>
+                                    </div>
+                                </div>
+                            </lightning-layout-item>
+
+                            <div class="slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-top_medium">
+                                <div class="slds-box 
+                                            slds-theme_default
+                                            slds-box_xx-small 
+                                            slds-col slds-size_1-of-2 slds-medium-size--5-of-12">
+                                    <lightning-layout-item class="slds-float_left slds-size_1-of-1 slds-m-bottom_x-small">Status</lightning-layout-item>
+                                    <lightning-layout-item>
+                                        <div class={statusTextColor} >
+                                            <lightning-formatted-text value={pedido.StatusOrdem} class="slds-text-heading_small"></lightning-formatted-text>
+                                        </div>
+                                    </lightning-layout-item>
+                                </div>
+
+                                <div class="slds-box 
+                                            slds-theme_default
+                                            slds-box_xx-small 
+                                            slds-col slds-size_1-of-2 slds-medium-size--5-of-12 wrapped-content">
+                                    <lightning-layout-item class="slds-float_left slds-size_1-of-1 slds-m-bottom_x-small">Total</lightning-layout-item>
+                                    <lightning-layout-item>
+                                        <lightning-formatted-number value={valorTotal} format-style="currency" currency-code="BRL" class="slds-text-heading_small"></lightning-formatted-number>
+                                    </lightning-layout-item>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </lightning-layout>
+                </lightning-tab>
+
+                <lightning-tab label="Produtos">
+                    <div class="slds-scrollable">
+
+                        <table class="slds-table slds-table--bordered slds-m-vertical_small">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Contrato</th>
+                                    <th>Base</th>
+                                    <th>Mod</th>
+                                    <th>Prazo</th>
+                                    <th>Qtd. Pedida</th>
+                                    <th>Qtd. Faturada</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="slds-text-body_regular">
+                                <template for:each={detalhesComValor} for:item='produto'>
+                                    <tr key={produto.Produto}>
+                                        <td class="slds-cell-wrap cell_width">
+                                            <div class="slds-line-clamp_small">{produto.DescricaoProduto}</div>
+                                        </td>
+                                        <td>{produto.Contrato}</td>
+                                        <td class="slds-cell-wrap cell_width">
+                                            <div class="slds-line-clamp_medium">{produto.Centro}</div>
+                                        </td>
+                                        <td class="slds-cell-wrap cell_width">
+                                            <div class="slds-line-clamp_medium">{produto.ModalidadeEntrega}</div>
+                                        </td>
+                                        <td class="slds-cell-wrap cell_width">
+                                            <div class="slds-line-clamp_medium">{produto.CondicaoPagamento}</div></td>
+                                        <td>
+                                            <lightning-formatted-number value={produto.QuantidadePedida} format-style="decimal"></lightning-formatted-number>
+                                        </td>
+                                        <td>
+                                            <lightning-formatted-number value={produto.QuantidadeEntregue} format-style="decimal"></lightning-formatted-number>
+                                        </td>
+                                        <td>
+                                            <lightning-formatted-number value={produto.Valor} format-style="currency" currency-code="BRL"></lightning-formatted-number>
+                                        </td>
+                                    
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </lightning-tab>
+
+                <lightning-tab if:false={nenhumaRemessaProgramada} label="Status detalhado / Programado">
+                    <lightning-layout multiple-rows="true">
+                            <template for:each={remessasProgramadas} for:item='remessa'>
+                                <div key={remessa.key} class="slds-size_1-of-1 slds-grid slds-wrap">
+
+                                    <lightning-layout-item class="slds-size_1-of-1  slds-p-vertical_small">
+                                        <table class="slds-table slds-table--bordered slds-max-medium-table_stacked-horizontal slds-m-bottom_xx-small">
+                                            <thead>
+                                                <th>Produto</th>
+                                                <th>Quantidade Programada</th>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="slds-col slds-size_1-of-2">{remessa.DescricaoProduto}</td>
+                                                    <td class="slds-col slds-size_1-of-2">
+                                                        <lightning-formatted-number value={remessa.QuantidadeTransporte} format-style="decimal"></lightning-formatted-number>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </lightning-layout-item>
+
+                                    <div class="slds-size_1-of-1 slds-grid slds-wrap slds-p-bottom_medium slds-border_bottom">
+
+                                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                                <p class="slds-text-title bold_text slds-p-bottom_x-small">Programação</p>
+                                                <lightning-formatted-text value={remessa.NumeroProgramacao}></lightning-formatted-text>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4">
+                                                <p class="slds-text-title bold_text slds-p-bottom_x-small">Programado em</p>
+                                                <lightning-formatted-date-time value={remessa.DataCriacaoProgramacao}></lightning-formatted-date-time>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4">
+                                                <p class="slds-text-title bold_text slds-p-bottom_x-small">Nº da Placa</p>
+                                                <lightning-formatted-text value={remessa.PlacaVeiculo}></lightning-formatted-text>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4">
+                                                <div class="slds-form-element">
+                                                    <p class="slds-text-title bold_text slds-p-bottom_x-small">Transportador</p>
+                                                    <div class="slds-form-element__control">
+                                                        <div class="slds-form-element__static">
+                                                            <p>{remessa.NomeTransportadora}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </lightning-layout-item>
+                                    </div>
+
+                                </div>
+                            </template>                                 
+
+                    </lightning-layout>
+                </lightning-tab>
+
+                <lightning-tab if:false={nenhumaRemessaCarregada} label="Status detalhado / Carregado">
+                    <lightning-layout multiple-rows="true">
+                        <template for:each={remessasCarregamento} for:item='remessa'>
+                            <div key={remessa.key} class="slds-size_1-of-1 slds-grid slds-wrap slds-scrollable">
+
+                                <lightning-layout-item class="slds-size_1-of-1 slds-p-vertical_small">
+                                    <table class="slds-table slds-table--bordered slds-m-bottom_xx-small">
+                                        <thead>
+                                            <th>Produto</th>
+                                            <th>Quantidade Programada</th>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="slds-cell-wrap">
+                                                    <div class="slds-line-clamp_medium">{remessa.DescricaoProduto}</div>
+                                                </td>
+                                                <td class="slds-size_1-of-2">
+                                                    <lightning-formatted-number value={remessa.QuantidadeTransporte} format-style="decimal"></lightning-formatted-number>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </lightning-layout-item>
+
+                                <div class="slds-size_1-of-1 slds-grid slds-wrap slds-p-bottom_medium slds-border_bottom">
+                                        <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                            <p class="slds-text-title bold_text slds-p-bottom_x-small">Programação</p>
+                                            <lightning-formatted-text value={remessa.NumeroProgramacao}></lightning-formatted-text>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                            <p class="slds-text-title bold_text slds-p-bottom_x-small">Programado em</p>
+                                            <lightning-formatted-date-time value={remessa.DataCriacaoProgramacao}></lightning-formatted-date-time>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item class="slds-col slds-size_1-of-2 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                            <p class="slds-text-title bold_text slds-p-bottom_x-small">Nº da Placa</p>
+                                            <lightning-formatted-text value={remessa.PlacaVeiculo}></lightning-formatted-text>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item class="slds-col slds-size_1-of-1 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                            <div class="slds-form-element">
+                                                <p class="slds-text-title bold_text slds-p-bottom_x-small">Transportador</p>
+                                                <div class="slds-form-element__control">
+                                                    <div class="slds-form-element__static">
+                                                        <p>{remessa.NomeTransportadora}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item class="slds-col slds-size_1-of-1 slds-medium-size--1-of-4 slds-m-bottom_small">
+                                            <p class="slds-text-title bold_text slds-p-bottom_x-small">Data do Carregamento</p>
+                                            <lightning-formatted-date-time value={remessa.DataEfetivaCarregamento}></lightning-formatted-date-time>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item class="slds-col slds-size_1-of-1 slds-medium-size--1-of-4">
+                                            <p class="slds-text-title bold_text slds-p-bottom_x-small">Saída da Base</p>
+                                            <lightning-formatted-text value={remessa.DataHoraSaidaBase}></lightning-formatted-text>
+                                        </lightning-layout-item>
+                                </div>
+
+                            </div>
+                        </template>                                 
+                    </lightning-layout>
+                </lightning-tab>
+
+                <lightning-tab if:false={nenhumaRemessaCarregada} label="Faturamentos">
+                    <div class="slds-scrollable">
+                        <table class="slds-table slds-table--bordered slds-m-vertical_small">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Qtd. Faturada</th>
+                                    <th>Data Faturamento</th>
+                                    <th>Info. de Carregamento</th>
+                                    <th>Valor Faturado</th>
+                                    <th>Nota Fiscal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="slds-text-body_regular">
+                                <template for:each={remessasCarregamento} for:item='remessa'>
+                                    <tr key={remessa.key}>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-line-clamp_medium">{remessa.DescricaoProduto}</div></td>
+                                        <td>
+                                            <lightning-formatted-number value={remessa.QuantidadeFaturadaEfetivamente} format-style="decimal"></lightning-formatted-number>
+                                        </td>
+                                        <td>
+                                            <lightning-formatted-date-time value={remessa.DataFaturamentoIndice}></lightning-formatted-date-time>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-line-clamp_small">{remessa.InfoCarregamento}</div>
+                                        </td>
+                                        <td>
+                                            <lightning-formatted-number value={remessa.ValorFaturado} format-style="currency" currency-code="BRL"></lightning-formatted-number>
+                                        </td>
+                                        <td>{remessa.NumeroNotaFiscal}</td>
+                                    
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+            </lightning-tabset>
+        </div>
+    </div>
+
+</template>

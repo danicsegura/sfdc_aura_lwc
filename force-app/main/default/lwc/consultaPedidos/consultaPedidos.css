@@ -1,0 +1,50 @@
+.short_text{
+    display: none;
+}
+
+@media (max-width: 480px){
+    .short_text { display: inline-block; }
+    .full_text { display: none; }
+    .button_menu_date { padding-left: 0px;
+                        margin-top: 10px;}
+}
+
+@media (min-width: 480px){
+    .button_menu_date { padding-left: 10px; }
+}
+
+.status_default{
+    color:black;
+}
+
+.status_totalmente_cancelado{
+    color:#9b6051;
+}
+
+.status_parcialmente_bloqueado{
+    color:sandybrown;
+}
+
+.status_bloqueio_financeiro{
+    color:tomato;
+}
+
+.status_nao_programado{
+    color:grey;
+}
+
+.status_pacialmente_programado{
+    color:#536ad4;
+}
+
+.status_totalmente_programado{
+    color:#394db6;
+}
+
+.status_parcialmente_faturado{
+    color: #3bc798;
+}
+
+.status_totalmente_faturado{
+    color: #53a264;
+}
