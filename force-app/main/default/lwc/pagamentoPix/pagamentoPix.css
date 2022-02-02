@@ -1,0 +1,20 @@
+.slds-modal__container{
+    max-width: 30rem !important;
+    width: 40% !important;
+}
+
+.emailFieldsVisible{
+    display: inline;
+}
+
+.emailFieldsNotVisible{
+    display: none;
+}
+
+.show{
+    display: initial;
+}
+
+.hide{
+    display: none;
+}

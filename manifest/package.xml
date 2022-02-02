@@ -6,11 +6,47 @@
 		<members>AccountLimiteCreditoServiceTest</members>
 		<members>AccountLimiteCreditoWrapper</members>
 		<members>AccountLimiteCreditoWrapperTest</members>
+		<members>AccountUpdateCentroDeLucroBatch</members>
+		<members>AccountUpdateCentroDeLucroBatchTest</members>
+		<members>AccountUpdateCentroDeLucroQueueable</members>
+		<members>AccountUpdateCentroDeLucroQueueableTest</members>
+		<members>ACRTriggerHandler</members>
+		<members>AreaDeVendasTriggerHandler</members>
+		<members>AreaDeVendasTriggerHandlerTest</members>
+		<members>CentroDeLucroTriggerHandler</members>
+		<members>CentroDeLucroTriggerHandlerTest</members>
+		<members>ConsultaPedidosController</members>
+		<members>ConsultaPedidosControllerTest</members>
+		<members>ConsultaPedidosMock</members>
+		<members>ConsultaPedidosService</members>
+		<members>ConsultaPedidosServiceTest</members>
+		<members>ConsultaPedidosWrapper</members>
+		<members>ConsultaPedidosWrapperTest</members>
+		<members>ExpurgoLogDeIntegracoesBatch</members>
+		<members>ExpurgoLogDeIntegracoesBatchTest</members>
+		<members>IntegrationServicePagamentoPix</members>
+		<members>IntegrationServicePagamentoPixTest</members>
+		<members>IntegrationServicePagamentoPixMock</members>
+		<members>PagamentoPixLwcController</members>
+		<members>PagamentoPixLwcControllerTest</members>
+		<members>PagamentoPixReturnWrapper</members>
+		<members>PagamentoPixReturnWrapperTest</members>
+		<members>RelateContactToAccountsBatch</members>
+		<members>RelateContactToAccountsController</members>
+		<members>RelateContactToAccountsControllerTest</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
 		<members>AccountLimiteCredito</members>
 		<name>AuraDefinitionBundle</name>
+	</types>
+	<types>
+    	<members>consultaPedidos</members>
+    	<members>detalhesPedido</members>
+    	<members>pagamentoPix</members>
+    	<members>pagamentoPixError</members>
+    	<members>relateContactToAccounts</members>
+    	<name>LightningComponentBundle</name>
 	</types>
 	<version>51.0</version>
 </Package>
