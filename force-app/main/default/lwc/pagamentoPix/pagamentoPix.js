@@ -6,7 +6,6 @@ import createLogIntegracao from '@salesforce/apex/PagamentoPixLwcController.crea
 import getFieldsValuesString from '@salesforce/apex/PagamentoPixLwcController.getFieldsValuesString';
 import callServiceNewPix from '@salesforce/apex/IntegrationServicePagamentoPix.callServiceNewPix';
 import callServiceReimpressao from '@salesforce/apex/IntegrationServicePagamentoPix.callServiceReimpressao';
-import qrcode from './qrcode.js';
 
 export default class PagamentoPix extends LightningElement {
     @api row;
@@ -20,10 +19,9 @@ export default class PagamentoPix extends LightningElement {
     txId = '';
     numeroContrato;
     qrCode = '';
-    qrCodeEncodedUrl;
     qrCodeSource;
     crc16;
-    crc16String;
+    emvString;
     changeVisibility = false;
     qrCodeVisibility;
     spinnerVisibility;
@@ -31,7 +29,6 @@ export default class PagamentoPix extends LightningElement {
     disableSendBtn = true;
     errorPrevisulMsg = 'Favor entrar em contato com a equipe de suporte da Previsul.';
     
-
     get emailFieldsVisibility(){
         return this.changeVisibility ? 'emailFieldsVisible' : 'emailFieldsNotVisible';
     }
@@ -99,7 +96,7 @@ export default class PagamentoPix extends LightningElement {
                     this.showToast('Exibição do QRCode para pagamento no valor de R$ ' + result.valor, '', 'success', 'dismissible');
                     this.integrationSuccess = true;
                     this.qrCode = this.integrationPixResult.pix.qrCode;
-                    this.generateQrCode();
+                    this.printQrCode();
                 }
             }else{
                 this.showToast('Ocorreu um erro no envio do QRCode.', this.errorPrevisulMsg, 'error', 'sticky');
@@ -109,7 +106,7 @@ export default class PagamentoPix extends LightningElement {
             this.disableSendEmail = false;
         })
         .catch(error => {
-            console.log('Erro na chamada do método callServiceNewPix: ')
+            console.log('Erro na chamada do método callServiceReimpressao: ')
             console.log(error);
         })
     }
@@ -119,16 +116,13 @@ export default class PagamentoPix extends LightningElement {
                                 transactionAmount   : value   })
             .then(result =>{
                 if(result){
-                    this.crc16String = result;
+                    this.emvString = result;
                 }
             })
             .then(result => {
                 this.calculateCrc16();
-            })
-            .then(result => {
-                this.generateQrCode();
-            })
-            .then(result => {
+                this.printQrCode();
+
                 if(this.isNewPixRequest){
                     this.createLogIntegracao();
                 }
@@ -184,13 +178,12 @@ export default class PagamentoPix extends LightningElement {
             0x8fd9, 0x9ff8, 0x6e17, 0x7e36, 0x4e55, 0x5e74,
             0x2e93, 0x3eb2, 0x0ed1, 0x1ef0];
             
-        var s = this.crc16String;
         var crc = 0xFFFF;
         var j, i;
     
     
-        for (i = 0; i < s.length; i++) {
-            var c = s.charCodeAt(i);
+        for (i = 0; i < this.emvString.length; i++) {
+            var c = this.emvString.charCodeAt(i);
             if (c > 255) {
                 throw new RangeError();
             }
@@ -200,25 +193,18 @@ export default class PagamentoPix extends LightningElement {
 
         this.crc16 = ((crc ^ 0) & 0xFFFF);
 
-        while(this.crc16.length < 4){
+        var crc16string = Number(this.crc16).toString(16).toUpperCase();
+
+        while(crc16string.length < 4){
             let zero = '0';
-            this.crc16 = zero.concat(this.crc16);
+            crc16string = zero.concat(crc16string);
         }
 
-        let crc16hexString = Number(this.crc16).toString(16).toUpperCase();
-        this.qrCode = this.crc16String + crc16hexString;
+        this.qrCode = this.emvString + crc16string;
     }
 
-    generateQrCode(){
-        this.qrCodeEncodedUrl = encodeURIComponent(this.qrCode);
-
-        this.qrCodeSource = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + this.qrCodeEncodedUrl;
-        const qrCodeGenerated = new qrcode(0, 'H');
-        let strForGenerationOfQrCode = this.qrCodeSource;
-        qrCodeGenerated.addData(strForGenerationOfQrCode);
-        qrCodeGenerated.make();
-        let element = this.template.querySelector(".qrcode2");
-        element.innerHTML = qrCodeGenerated.createSvgTag({});
+    printQrCode(){
+        this.qrCodeSource = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' + this.qrCode;
 
         this.qrCodeVisibility = 'show';
         this.spinnerVisibility = 'hide';

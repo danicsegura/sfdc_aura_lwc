@@ -10,6 +10,32 @@
 *********************************************************************************************************************************/
 @isTest
 public class IntegrationServicePagamentoPixTest {
+    @testSetup
+    static void testSetup(){
+        Profile profile = [Select Id from Profile where name in ('System Administrator', 'Administrador do Sistema') LIMIT 1];
+
+        User userTest = new User();
+        userTest.LastName = 'Test';
+        userTest.Alias = 'Test';
+        userTest.Email = 'usertest@previsul.com';
+        userTest.Username = 'usertest@previsul.com';
+        userTest.CPF__c = '12345678910';
+        userTest.ProfileId = profile.Id;
+        userTest.LocaleSidKey = 'pt_BR';
+        userTest.LanguageLocaleKey = 'pt_BR';
+        userTest.EmailEncodingKey = 'UTF-8';
+        userTest.TimeZoneSidKey = 'America/Sao_Paulo';
+        userTest.IsActive = true;
+        insert userTest;
+
+        LogIntegracao__c logIntegracao = new LogIntegracao__c();
+        logIntegracao.NumeroContrato__c = '71476390';
+        logIntegracao.Status__c = 'Ativo';
+        logIntegracao.Identificador_sequencial__c = 1;
+        logIntegracao.TxId__c = 'C001testtxIdtst';
+        insert logIntegracao;
+    }
+
     @isTest
     static void getTokenTest(){
         Test.startTest();
@@ -23,9 +49,30 @@ public class IntegrationServicePagamentoPixTest {
      @isTest
     static void callServiceNewPixTest(){
         String cobrancaString = '{"apolice":"10101140000124","apoliceDisplay":"10101140000124","chaveParcelaLegado":"12294329","ColetivoSn":"N","competencia":"202007","diasVencido":"0","dtVencimento":"31/12/2021","fatura":"71476390","formaPagamento":"Débito em Conta","sistema":"I4PRO","valor":"0.01"}';
+        User user = [SELECT Id FROM User WHERE UserName = 'usertest@previsul.com' LIMIT 1];
+        PagamentoPixReturnWrapper result = new PagamentoPixReturnWrapper();
+        
         Test.startTest();
-            Test.setMock(HttpCalloutMock.class, new IntegrationServicePagamentoPixMock());
-            PagamentoPixReturnWrapper result = IntegrationServicePagamentoPix.callServiceNewPix(cobrancaString);
+            System.runAs(user){
+                Test.setMock(HttpCalloutMock.class, new IntegrationServicePagamentoPixMock());
+                result = IntegrationServicePagamentoPix.callServiceNewPix(cobrancaString);
+            }
+        Test.stopTest();
+
+        System.assertEquals('EX23210000000000000000000000146', result.pix.txId, 'Não retornou o txId corretamente.');       
+    }
+
+    @isTest
+    static void callServiceReimpressaoTest(){
+        String cobrancaString = '{"apolice":"10101140000124","apoliceDisplay":"10101140000124","chaveParcelaLegado":"12294329","ColetivoSn":"N","competencia":"202007","diasVencido":"0","dtVencimento":"31/12/2021","fatura":"71476390","formaPagamento":"Débito em Conta","sistema":"I4PRO","valor":"0.01"}';
+        User user = [SELECT Id FROM User WHERE UserName = 'usertest@previsul.com' LIMIT 1];
+        PagamentoPixReturnWrapper result = new PagamentoPixReturnWrapper();
+        
+        Test.startTest();
+            System.runAs(user){
+                Test.setMock(HttpCalloutMock.class, new IntegrationServicePagamentoPixMock());
+                result = IntegrationServicePagamentoPix.callServiceReimpressao(cobrancaString);
+            }
         Test.stopTest();
 
         System.assertEquals('EX23210000000000000000000000146', result.pix.txId, 'Não retornou o txId corretamente.');       

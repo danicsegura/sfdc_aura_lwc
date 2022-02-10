@@ -7,6 +7,7 @@
 * -------
 * VERSION   AUTHOR              DATE            DETAIL      Description
 * 1.0       Daniela Segura      22/12/2021      Created     Versão inicial
+* 1.1       Daniela Segura      07/02/2022      Edited      Edição no método callServiceNewPix
 *********************************************************************************************************************************/
 public without sharing class IntegrationServicePagamentoPix {
     private static IntegrationServiceUltimosPag.returnPagamentoVencidos cobranca = new IntegrationServiceUltimosPag.returnPagamentoVencidos();
@@ -21,6 +22,7 @@ public without sharing class IntegrationServicePagamentoPix {
     * --------
     * VERSION   AUTHOR 			    DATE 			DETAIL 		Description
     * 1.0 	    Daniela Segura      22/12/2021 		Created 	Versão inicial
+    * 1.1       Daniela Segura      07/02/2022      Edited      Correção no tratamento da response
     **************************************************************************************************************************************/
     @AuraEnabled
     public static PagamentoPixReturnWrapper callServiceNewPix(String cobrancaString) {
@@ -29,57 +31,63 @@ public without sharing class IntegrationServicePagamentoPix {
         Boolean integrationSuccessful = false;
         cobranca = (IntegrationServiceUltimosPag.returnPagamentoVencidos)JSON.deserialize(cobrancaString, IntegrationServiceUltimosPag.returnPagamentoVencidos.class); 
 
-        if(accessToken != ''){
-            String body = generateBody('newPix');
-            if(body == null){
-                return result;
-            }
-
-            Servicos__mdt servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXGeracaoHM'];
-            Autenticao_Previsul__mdt autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthHM'];
-            
-            Http http = new Http();
-            HttpRequest request = new HttpRequest();
-
-            request.setMethod(servico.Metodo__c);
-            request.setHeader('Content-Type', 'application/json');
-            request.setHeader('Authorization', 'Bearer ' + accessToken);
-            request.setHeader(autenticacao.client_id__c, autenticacao.client_secret__c);
-            request.setBody(body);
-            request.setTimeout(Integer.valueOf(servico.Timeout__c));
-            request.setEndpoint(servico.Endpoint__c);
-
-             try{
-                HttpResponse response = http.send(request);
-                if(response.getStatusCode() == 200 && !String.isBlank(response.getBody())){
-                    result = PagamentoPixReturnWrapper.parse(response.getBody());
-                    integrationSuccessful = true;
-                }else if(response.getStatusCode() == 400 && !String.isBlank(response.getBody())){
-                    result = PagamentoPixReturnWrapper.parse(response.getBody());
-                    integrationSuccessful = false;
-                }else if(response.getStatusCode() == 401){
-                    result.message = 'Não autorizado. Credenciais inválidas.';
-                    integrationSuccessful = false;
-                }else if(response.getStatusCode() == 500){
-                    result.message = 'CNPJ não configurado no para realizar esta operação.';
-                    integrationSuccessful = false;
-                }else{
-                    integrationSuccessful = false;
-
-                    if(!String.isBlank(response.getBody())){
-                        try{
-                            result = PagamentoPixReturnWrapper.parse(response.getBody());
-                        }catch(Exception e){
-                            result.message = 'Status do erro: ' + String.valueOf(response.getStatusCode());
-                        }
-
-                    }
-                }
-            }catch(CalloutException e){
-               result.message = 'Erro ao tentar gerar o PIX: ' + e.getMessage();
-            }
-        }else{
+        if(accessToken == ''){
             result.message = tokenError != null ? tokenError : 'Erro na geração do Token.';
+            return result;
+        }
+
+        String body = generateBody('newPix');
+
+        if(body == null){
+            return result;
+        }
+
+        Organization org = [SELECT IsSandbox FROM Organization];
+        Servicos__mdt servico = new Servicos__mdt();
+        Autenticao_Previsul__mdt autenticacao = new Autenticao_Previsul__mdt();
+
+        if(org.IsSandbox == true){
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXGeracaoHM'];
+            autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthHM'];
+        }else{
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXGeracaoPRD'];
+            autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthPRD'];
+        }
+
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+
+        request.setMethod(servico.Metodo__c);
+        request.setHeader('Content-Type', 'application/json');
+        request.setHeader('Authorization', 'Bearer ' + accessToken);
+        request.setHeader(autenticacao.client_id__c, autenticacao.client_secret__c);
+        request.setBody(body);
+        request.setTimeout(Integer.valueOf(servico.Timeout__c));
+        request.setEndpoint(servico.Endpoint__c);
+
+        try{
+            HttpResponse response = http.send(request);
+
+            if(response.getStatusCode() == 200 && !String.isBlank(response.getBody())){
+                result = PagamentoPixReturnWrapper.parse(response.getBody());
+                integrationSuccessful = true;
+            }else if(response.getStatusCode() == 401){
+                result.message = 'Não autorizado. Credenciais inválidas.';
+                integrationSuccessful = false;
+            }else{
+                integrationSuccessful = false;
+
+                if(!String.isBlank(response.getBody())){
+                    try{
+                        result = PagamentoPixReturnWrapper.parse(response.getBody());
+                    }catch(Exception e){
+                        result.message = 'Status: ' + String.valueOf(response.getStatusCode()) + ' ' + response.getStatus();
+                    }
+
+                }
+            }
+        }catch(CalloutException e){
+            result.message = 'Erro ao tentar gerar o PIX: ' + e.getMessage();
         }
 
         return result;
@@ -102,47 +110,58 @@ public without sharing class IntegrationServicePagamentoPix {
         Boolean integrationSuccessful = false;
         cobranca = (IntegrationServiceUltimosPag.returnPagamentoVencidos)JSON.deserialize(cobrancaString, IntegrationServiceUltimosPag.returnPagamentoVencidos.class); 
 
-        if(accessToken != ''){
-            String body = generateBody('reimpressao');
-            if(body == null){
-                return result;
-            }
-            
-            Servicos__mdt servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXImpressaoHM'];
-            Autenticao_Previsul__mdt autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthHM'];
-            
-            Http http = new Http();
-            HttpRequest request = new HttpRequest();
-
-            request.setMethod(servico.Metodo__c);
-            request.setHeader('Content-Type', 'application/json');
-            request.setHeader('Authorization', 'Bearer ' + accessToken);
-            request.setHeader(autenticacao.client_id__c, autenticacao.client_secret__c);
-            request.setBody(body);
-            request.setTimeout(Integer.valueOf(servico.Timeout__c));
-            request.setEndpoint(servico.Endpoint__c);
-
-            try{
-                HttpResponse response = http.send(request);
-                if(response.getStatusCode() == 200 && !String.isBlank(response.getBody())){
-                    result = PagamentoPixReturnWrapper.parse(response.getBody());
-                    integrationSuccessful = true;
-                }else{
-                    integrationSuccessful = false;
-                    try{
-                        result = PagamentoPixReturnWrapper.parse(response.getBody());
-                        if(String.IsBlank(result.message)){
-                            result.message = result.moreInformation;
-                        }
-                    }catch(Exception e){
-                        result.message = 'Status do erro: ' + String.valueOf(response.getStatusCode());
-                    }                  
-                }
-            }catch(CalloutException e){
-               result.message = 'Erro ao tentar reimprimir o PIX: ' + e.getMessage();
-            }
-        }else{
+        if(accessToken == ''){
             result.message = tokenError != null ? tokenError : 'Erro na geração do Token.';
+            return result;
+        }
+
+        String body = generateBody('reimpressao');
+
+        if(body == null){
+            return result;
+        }
+
+        Organization org = [SELECT IsSandbox FROM Organization];
+        Servicos__mdt servico = new Servicos__mdt();
+        Autenticao_Previsul__mdt autenticacao = new Autenticao_Previsul__mdt();
+
+        if(org.IsSandbox == true){
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXImpressaoHM'];
+            autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthHM'];
+        }else{
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXImpressaoPRD'];
+            autenticacao = [SELECT client_id__c, client_secret__c FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXGeracaoAuthPRD'];
+        }
+        
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+
+        request.setMethod(servico.Metodo__c);
+        request.setHeader('Content-Type', 'application/json');
+        request.setHeader('Authorization', 'Bearer ' + accessToken);
+        request.setHeader(autenticacao.client_id__c, autenticacao.client_secret__c);
+        request.setBody(body);
+        request.setTimeout(Integer.valueOf(servico.Timeout__c));
+        request.setEndpoint(servico.Endpoint__c);
+
+        try{
+            HttpResponse response = http.send(request);
+            if(response.getStatusCode() == 200 && !String.isBlank(response.getBody())){
+                result = PagamentoPixReturnWrapper.parse(response.getBody());
+                integrationSuccessful = true;
+            }else{
+                integrationSuccessful = false;
+                try{
+                    result = PagamentoPixReturnWrapper.parse(response.getBody());
+                    if(String.IsBlank(result.message)){
+                        result.message = result.moreInformation;
+                    }
+                }catch(Exception e){
+                    result.message = 'Status do erro: ' + String.valueOf(response.getStatusCode());
+                }                  
+            }
+        }catch(CalloutException e){
+            result.message = 'Erro ao tentar reimprimir o PIX: ' + e.getMessage();
         }
 
         return result;
@@ -160,8 +179,18 @@ public without sharing class IntegrationServicePagamentoPix {
     **************************************************************************************************************************************/
     public static String getToken(){
         String accessToken;
-        Servicos__mdt servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXAccessTokenHM'];
-        Autenticao_Previsul__mdt autenticacao = [SELECT client_id__c, client_secret__c  FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXAccessTokenAuthHM'];
+
+        Organization org = [SELECT IsSandbox FROM Organization];
+        Servicos__mdt servico = new Servicos__mdt();
+        Autenticao_Previsul__mdt autenticacao = new Autenticao_Previsul__mdt();
+
+        if(org.IsSandbox == true){
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXAccessTokenHM'];
+            autenticacao = [SELECT client_id__c, client_secret__c  FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXAccessTokenAuthHM'];
+        }else{
+            servico = [SELECT Id, Metodo__c, Timeout__c, Endpoint__c, Service_Name__c, Body__c  FROM Servicos__mdt WHERE MasterLabel = 'PIXAccessTokenPRD'];
+            autenticacao = [SELECT client_id__c, client_secret__c  FROM Autenticao_Previsul__mdt WHERE MasterLabel = 'PIXAccessTokenAuthPRD'];
+        }
         
         Http http = new Http();
         HttpRequest request = new HttpRequest();
@@ -205,6 +234,7 @@ public without sharing class IntegrationServicePagamentoPix {
         String txId = '';
         String body, userCpf;
         List<User> lstUser = [SELECT CPF__c FROM User WHERE Id =: UserInfo.getUserId() LIMIT 1];
+        
         if(!lstUser.isEmpty() && String.isNotBlank(lstUser.get(0).CPF__c)){
             userCpf = lstUser.get(0).CPF__c;
         }
@@ -212,7 +242,10 @@ public without sharing class IntegrationServicePagamentoPix {
         JSONGenerator json = JSON.createGenerator(true);
 
         if(serviceName == 'newPix'){
-            Informacoes_Empresa_Previsul__mdt infoEmpresa = [SELECT CNPJ__c, Nome__c  FROM Informacoes_Empresa_Previsul__mdt WHERE MasterLabel = 'Previsul'];
+            Informacoes_Empresa_Previsul__mdt infoEmpresa = [SELECT CNPJ__c, Nome__c  
+                                                            FROM Informacoes_Empresa_Previsul__mdt 
+                                                            WHERE MasterLabel = 'Previsul'];
+                                                            
             txId = generateTxId();
             Double valor = Double.valueOf(cobranca.valor);
             String dataCobranca = System.now().addDays(2).format('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
@@ -276,8 +309,6 @@ public without sharing class IntegrationServicePagamentoPix {
             body = json.getAsString();
         }
 
-        System.debug('$$$ json: ' + body);
-
         return body;
     }
 
@@ -295,7 +326,9 @@ public without sharing class IntegrationServicePagamentoPix {
         String txId;
         Decimal identificadorSequencial = 1;
 
-        List<LogIntegracao__c> lstLogIntegracao = [SELECT Identificador_sequencial__c FROM LogIntegracao__c ORDER BY Identificador_sequencial__c DESC];
+        List<LogIntegracao__c> lstLogIntegracao = [SELECT Identificador_sequencial__c 
+                                                    FROM LogIntegracao__c 
+                                                    ORDER BY Identificador_sequencial__c DESC];
 
         if(!lstLogIntegracao.isEmpty() && lstLogIntegracao.get(0).Identificador_sequencial__c != null){
             identificadorSequencial = lstLogIntegracao.get(0).Identificador_sequencial__c + 1;

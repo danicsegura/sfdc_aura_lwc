@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Cobranças a Vencer/Vencidas">
+        <p class="slds-p-horizontal_small">Lista dos valores em aberto ou a vencer
+        </p>
+        <lightning-datatable class="slds-max-medium-table_stacked" key-field="Id" data={results} columns={columns} onrowaction={handleRowAction}
+            hide-checkbox-column="true" show-row-number-column="true" row-number-offset="0">
+        </lightning-datatable>
+    </lightning-card>
+
+    <template if:true={openPixModal}>
+        <c-pagamento-pix onclose={closeModal} row={currentRow}></c-pagamento-pix>
+    </template>
+
+    <template if:true={openPixErrorModal}>
+        <c-pagamento-pix-error onclose={closeModal}></c-pagamento-pix-error>
+    </template>
+</template>
