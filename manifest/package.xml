@@ -22,6 +22,9 @@
 		<members>ConsultaPedidosServiceTest</members>
 		<members>ConsultaPedidosWrapper</members>
 		<members>ConsultaPedidosWrapperTest</members>
+		<members>ConsultaTitulosFinanceirosMock</members>
+		<members>ConsultaTitulosFinanceirosService</members>
+		<members>ConsultaTitulosFinanceirosServiceTest</members>
 		<members>ExpurgoLogDeIntegracoesBatch</members>
 		<members>ExpurgoLogDeIntegracoesBatchTest</members>
 		<members>IntegrationServicePagamentoPix</members>
@@ -34,6 +37,8 @@
 		<members>RelateContactToAccountsBatch</members>
 		<members>RelateContactToAccountsController</members>
 		<members>RelateContactToAccountsControllerTest</members>
+		<members>TitulosFinanceirosWrapper</members>
+		<members>TitulosFinanceirosWrapperTest</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -42,6 +47,7 @@
 	</types>
 	<types>
     	<members>consultaPedidos</members>
+    	<members>consultaTitulosFinanceiros</members>
     	<members>detalhesPedido</members>
     	<members>pagamentoPix</members>
     	<members>pagamentoPixError</members>

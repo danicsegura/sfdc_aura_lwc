@@ -1,0 +1,59 @@
+.field-title{
+    font-weight: bold;
+    padding: 8px;
+}
+
+.field-value {  padding-left: 8px;
+                margin-bottom: 10px;   }
+
+.combobox { padding-top: 10px;}
+
+.button-menu {  padding-top: 10px;
+                padding-left: 10px;}
+
+.status-vencido{
+    color:tomato;
+}
+
+.status-no-prazo{
+    color: #53a264;
+}
+
+.bold-text{
+    font-weight: bold;
+}
+
+.icon-hide {
+    display: none;
+}
+
+.icon-show {
+    display: inline-block;
+    padding-left: 5px;
+}
+
+.box-color-vencidos {
+    background-color: #fff4f2;
+}
+
+.box-color-no-prazo {
+    background-color: #f2fdee;
+}
+
+th:hover{
+    background-color: #ffffff;
+}
+
+th{
+    cursor: pointer;
+}
+
+@media (max-width: 480px){
+    .field-title {  font-size: medium;
+                    padding: 2px;   }
+
+    .field-value {  padding-left: 2px;   }
+
+    .button-menu {  padding-left: 4px;
+                    margin-bottom: 6px; }
+}
