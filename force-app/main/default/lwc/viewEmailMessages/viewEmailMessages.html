@@ -1,0 +1,74 @@
+<template>
+    <div if:true={showSpinner} class="slds-is-relative" style="min-height: 50vh;">
+        <lightning-spinner alternative-text="Carregando" size="medium" variant="brand"></lightning-spinner>
+    </div>
+
+    <lightning-accordion if:true={messages} class="slds-var-p-around_medium">
+        <template for:each={messages} for:item="message">
+            <lightning-accordion-section name={message.Id} label={message.title} key={message.Id}>
+                <div class="slds-grid slds-wrap slds-is-relative slds-var-m-left_large">
+                    <div class="slds-col slds-size_1-of-1 slds-var-m-bottom_medium">
+                        <lightning-icon class="subheader" icon-name="standard:email" alternative-text="Email" title="Email" size="xx-small"></lightning-icon>
+
+                        <p class="subheader">Para: {message.ToAddress}</p>
+
+                        <div class="subheader subheader__info-container">
+                            <lightning-icon class="icon-hover" 
+                                            icon-name="utility:info" 
+                                            alternative-text="Info" 
+                                            title="Ver detalhes" 
+                                            size="xx-small" 
+                                            onclick={handleInfoClick}>
+                            </lightning-icon>
+
+                            <section if:true={openPopover} aria-label="Dialog title" aria-describedby="popover-body-id" class="slds-popover slds-nubbin_top" role="dialog">
+                                <lightning-icon class="slds-popover__close slds-float_right icon-hover" 
+                                                icon-name="utility:close" 
+                                                alternative-text="Fechar" 
+                                                title="Fechar" 
+                                                size="xx-small"
+                                                onclick={handleCloseInfo}></lightning-icon>
+                                <div class="slds-popover__body">
+                                    <p><b>Assunto:</b> {message.Subject}</p>
+                                    <p><b>Para:</b> {message.ToAddress}</p>
+                                    <p><b>De:</b> {message.FromAddress}</p>
+                                </div>
+                            </section>
+                        </div>
+
+                    </div>
+
+                    <div if:true={message.HtmlBody} class="slds-col slds-size_1-of-1">
+                        <lightning-formatted-rich-text value={message.HtmlBody}></lightning-formatted-rich-text>
+                    </div>
+                    <div if:false={message.HtmlBody} class="slds-col slds-size_1-of-1">
+                        <p>{message.TextBody}</p>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-1 slds-var-m-top_large">
+                        <template for:each={message.ContentDocumentLinks} for:item="documentLink">
+                            <lightning-badge    key={documentLink.ContentDocumentId} 
+                                                label={documentLink.ContentDocument.Title} 
+                                                name={documentLink.ContentDocumentId} 
+                                                icon-name="standard:attach" 
+                                                onclick={navigateToContentDocument}
+                                                class="attachment-badge"></lightning-badge>
+                        </template>
+                    </div>
+                </div>
+            </lightning-accordion-section>
+        </template>
+    </lightning-accordion>
+
+    <div if:false={messages} style="height: 50px;" class="slds-var-p-around_medium slds-align_absolute-center">
+        <lightning-icon icon-name="utility:warning" 
+                        alternative-text="Warning!"
+                        variant="warning" 
+                        title="Warning!" 
+                        size="x-small"
+                        class="slds-var-m-right_small">
+        </lightning-icon>
+        <p>Ocorreu um erro ao buscar as mensagens de email. Favor entrar em contato com um administrador do sistema.</p>
+    </div>
+
+</template>

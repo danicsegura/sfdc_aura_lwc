@@ -1,0 +1,25 @@
+.subheader {
+    display: inline-block;
+    margin-right: 7px;
+}
+
+.icon-hover {
+    cursor: pointer;
+}
+
+.slds-popover.slds-nubbin_top {
+    left: 50%;
+    position: absolute;
+    top: 100%;
+    transform: translate(-50%, 0.75rem);
+}
+
+.subheader__info-container {
+    display: inline-block;
+    position: relative;
+}
+
+.attachment-badge:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

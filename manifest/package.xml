@@ -25,6 +25,7 @@
 		<members>ConsultaTitulosFinanceirosMock</members>
 		<members>ConsultaTitulosFinanceirosService</members>
 		<members>ConsultaTitulosFinanceirosServiceTest</members>
+		<members>EmailMessagesController</members>
 		<members>ExpurgoLogDeIntegracoesBatch</members>
 		<members>ExpurgoLogDeIntegracoesBatchTest</members>
 		<members>IntegrationServicePagamentoPix</members>
@@ -52,6 +53,7 @@
     	<members>pagamentoPix</members>
     	<members>pagamentoPixError</members>
     	<members>relateContactToAccounts</members>
+    	<members>viewEmailMessages</members>
     	<name>LightningComponentBundle</name>
 	</types>
 	<version>51.0</version>
